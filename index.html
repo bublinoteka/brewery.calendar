@@ -1,53 +1,24 @@
 <!DOCTYPE html>
-<html lang="cs">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Výrobní plán pivovaru v3</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 p-6">
+<html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Brewery Planner v4</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-100 p-6">
 <div class="max-w-7xl mx-auto">
-<h1 class="text-4xl font-bold text-center mb-6">🍺 Výrobní plán pivovaru</h1>
-<div class="bg-white rounded-2xl shadow p-4 mb-4 flex justify-center gap-4">
-<button onclick="changeWeek(-1)" class="px-4 py-2 bg-slate-200 rounded">← Předchozí týden</button>
-<div id="weekLabel" class="font-bold flex items-center"></div>
-<button onclick="changeWeek(1)" class="px-4 py-2 bg-slate-200 rounded">Další týden →</button>
-</div>
-<table class="w-full bg-white shadow rounded-2xl overflow-hidden">
-<thead><tr class="bg-slate-800 text-white"><th class="p-3 text-left">Datum</th><th>🍺 Vaření</th><th>🍾 Stáčení</th><th>🧼 Sanitace</th><th>📋 Ostatní</th></tr></thead>
-<tbody id="plannerBody"></tbody></table>
-</div>
-
-<div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center">
-<div class="bg-white rounded-2xl p-6 w-96">
-<h2 class="text-xl font-bold mb-4">Nový úkol</h2>
-<label class="block mb-2">Tank</label>
-<select id="tank" class="w-full border p-2 rounded mb-3"></select>
-<label class="block mb-2">Název úkolu</label>
-<input id="taskName" class="w-full border p-2 rounded mb-3" />
-<label class="block mb-2">Zodpovědná osoba</label>
-<select id="person" class="w-full border p-2 rounded mb-4">
-<option>Michael</option><option>Robert</option><option>Matej</option><option>Rene</option><option>David</option>
-</select>
-<div class="flex justify-end gap-2">
-<button onclick="closeModal()" class="px-4 py-2 bg-slate-200 rounded">Zrušit</button>
-<button onclick="saveTask()" class="px-4 py-2 bg-blue-600 text-white rounded">Uložit</button>
-</div>
-</div></div>
+<h1 class="text-4xl font-bold text-center mb-4">🍺 Výrobní plán pivovaru</h1>
+<div class="grid grid-cols-4 gap-3 mb-4" id="stats"></div>
+<div class="bg-white rounded-xl shadow p-4 mb-4 flex justify-center gap-4"><button onclick="changeWeek(-1)" class="px-4 py-2 bg-slate-200 rounded">← Předchozí týden</button><div id="weekLabel" class="font-bold flex items-center"></div><button onclick="changeWeek(1)" class="px-4 py-2 bg-slate-200 rounded">Další týden →</button></div>
+<table class="w-full bg-white rounded-xl shadow overflow-hidden"><thead><tr class="bg-slate-800 text-white"><th class="p-3 text-left">Datum</th><th>🍺 Vaření</th><th>🍾 Stáčení</th><th>🧼 Sanitace</th><th>📋 Ostatní</th></tr></thead><tbody id="plannerBody"></tbody></table></div>
+<div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center"><div class="bg-white w-96 rounded-2xl p-6"><h2 id="modalTitle" class="text-xl font-bold mb-4">Nový úkol</h2><select id="tank" class="w-full border p-2 rounded mb-3"></select><input id="taskName" placeholder="Název úkolu" class="w-full border p-2 rounded mb-3"><select id="person" class="w-full border p-2 rounded mb-3"><option>Michael</option><option>Robert</option><option>Matej</option><option>Rene</option><option>David</option></select><select id="status" class="w-full border p-2 rounded mb-4"><option>Plánováno</option><option>Probíhá</option><option>Hotovo</option><option>Pozastaveno</option></select><div class="flex justify-end gap-2"><button onclick="closeModal()" class="px-4 py-2 bg-slate-200 rounded">Zrušit</button><button onclick="saveTask()" class="px-4 py-2 bg-blue-600 text-white rounded">Uložit</button></div></div></div>
 <script>
-for(let i=1;i<=21;i++){tank.innerHTML+=`<option>Tank ${i}</option>`;}
-const categories={vareni:['🍺','bg-blue-500'],staceni:['🍾','bg-green-500'],sanitace:['🧼','bg-orange-500'],ostatni:['📋','bg-slate-500']};
-let weekOffset=0,currentDate='',currentCat='';
-let tasks=JSON.parse(localStorage.getItem('breweryPlannerV3')||'{}');
-function save(){localStorage.setItem('breweryPlannerV3',JSON.stringify(tasks));}
+for(let i=1;i<=21;i++){tank.innerHTML+=`<option>Tank ${i}</option>`}
+const cats={vareni:['🍺','bg-blue-500'],staceni:['🍾','bg-green-500'],sanitace:['🧼','bg-orange-500'],ostatni:['📋','bg-slate-500']};
+let tasks=JSON.parse(localStorage.getItem('breweryPlannerV4')||'{}');let weekOffset=0,currentDate='',currentCat='',editKey='',editId=null;
+function save(){localStorage.setItem('breweryPlannerV4',JSON.stringify(tasks));}
 function changeWeek(v){weekOffset+=v;render();}
-function getDays(){const n=new Date();const m=new Date(n);const d=m.getDay();m.setDate(m.getDate()+(d===0?-6:1-d)+weekOffset*7);let a=[];for(let i=0;i<5;i++){let x=new Date(m);x.setDate(m.getDate()+i);a.push(x);}return a;}
-function openModal(date,cat){currentDate=date;currentCat=cat;taskName.value='';modal.classList.remove('hidden');}
+function getDays(){const n=new Date(),m=new Date(n);const d=m.getDay();m.setDate(m.getDate()+(d===0?-6:1-d)+weekOffset*7);let a=[];for(let i=0;i<5;i++){let x=new Date(m);x.setDate(m.getDate()+i);a.push(x);}return a;}
+function openModal(date,cat){editId=null;currentDate=date;currentCat=cat;modalTitle.textContent='Nový úkol';taskName.value='';status.value='Plánováno';modal.classList.remove('hidden');}
+function editTask(date,cat,id){const key=date+'-'+cat;const t=(tasks[key]||[]).find(x=>x.id===id);if(!t)return;currentDate=date;currentCat=cat;editId=id;modalTitle.textContent='Upravit úkol';taskName.value=t.title;tank.value=t.tank;person.value=t.person;status.value=t.status||'Plánováno';modal.classList.remove('hidden');}
 function closeModal(){modal.classList.add('hidden');}
-function saveTask(){const key=currentDate+'-'+currentCat;if(!tasks[key])tasks[key]=[];tasks[key].push({id:Date.now(),title:taskName.value,tank:tank.value,person:person.value});save();closeModal();render();}
-function deleteTask(date,cat,id){const k=date+'-'+cat;tasks[k]=(tasks[k]||[]).filter(x=>x.id!==id);save();render();}
-function render(){weekLabel.textContent='Posun týdne: '+weekOffset;plannerBody.innerHTML='';getDays().forEach(day=>{const tr=document.createElement('tr');const date=day.toISOString().split('T')[0];tr.innerHTML=`<td class="p-3 bg-slate-50 font-semibold align-top">${day.toLocaleDateString('cs-CZ',{weekday:'long'})}<br>${day.toLocaleDateString('cs-CZ')}</td>`;Object.keys(categories).forEach(cat=>{const td=document.createElement('td');td.className='p-3 align-top';let h='';(tasks[date+'-'+cat]||[]).forEach(t=>{h+=`<div class="rounded-xl overflow-hidden shadow mb-2"><div class="${categories[cat][1]} text-white p-2"><b>${categories[cat][0]} ${t.title}</b><div>🛢 ${t.tank}</div><div>👤 ${t.person}</div></div><div class="p-2 text-right"><button onclick="deleteTask('${date}','${cat}',${t.id})">❌</button></div></div>`});h+=`<button class="w-full border-2 border-dashed rounded-xl p-2" onclick="openModal('${date}','${cat}')">+ Přidat úkol</button>`;td.innerHTML=h;tr.appendChild(td);});plannerBody.appendChild(tr);});}
+function saveTask(){const key=currentDate+'-'+currentCat;if(!tasks[key])tasks[key]=[];if(editId){let t=tasks[key].find(x=>x.id===editId);t.title=taskName.value;t.tank=tank.value;t.person=person.value;t.status=status.value;}else{tasks[key].push({id:Date.now(),title:taskName.value,tank:tank.value,person:person.value,status:status.value});}save();closeModal();render();}
+function delTask(date,cat,id){const k=date+'-'+cat;tasks[k]=(tasks[k]||[]).filter(x=>x.id!==id);save();render();}
+function badge(s){if(s==='Hotovo')return '🟢';if(s==='Probíhá')return '🟡';if(s==='Pozastaveno')return '🔴';return '⚪';}
+function render(){let planned=0,prog=0,done=0,hold=0;plannerBody.innerHTML='';weekLabel.textContent='Posun týdne: '+weekOffset;Object.values(tasks).flat().forEach(t=>{if(t.status==='Hotovo')done++;else if(t.status==='Probíhá')prog++;else if(t.status==='Pozastaveno')hold++;else planned++;});stats.innerHTML=`<div class="bg-white p-3 rounded shadow">⚪ Plánováno: ${planned}</div><div class="bg-white p-3 rounded shadow">🟡 Probíhá: ${prog}</div><div class="bg-white p-3 rounded shadow">🟢 Hotovo: ${done}</div><div class="bg-white p-3 rounded shadow">🔴 Pozastaveno: ${hold}</div>`;getDays().forEach(day=>{const date=day.toISOString().split('T')[0];const tr=document.createElement('tr');tr.innerHTML=`<td class="p-3 bg-slate-50 font-semibold align-top">${day.toLocaleDateString('cs-CZ',{weekday:'long'})}<br>${day.toLocaleDateString('cs-CZ')}</td>`;Object.keys(cats).forEach(cat=>{const td=document.createElement('td');td.className='p-2 align-top';let h='';(tasks[date+'-'+cat]||[]).forEach(t=>{h+=`<div class="rounded-xl overflow-hidden shadow mb-2"><div class="${cats[cat][1]} text-white p-2"><b>${cats[cat][0]} ${t.title}</b><div>🛢 ${t.tank}</div><div>👤 ${t.person}</div><div>${badge(t.status)} ${t.status}</div></div><div class="p-2 flex justify-end gap-2"><button onclick="editTask('${date}','${cat}',${t.id})">✏️</button><button onclick="delTask('${date}','${cat}',${t.id})">❌</button></div></div>`});h+=`<button class="w-full border-2 border-dashed rounded-xl p-2" onclick="openModal('${date}','${cat}')">+ Přidat úkol</button>`;td.innerHTML=h;tr.appendChild(td);});plannerBody.appendChild(tr);});}
 render();
-</script>
-</body></html>
+</script></body></html>
