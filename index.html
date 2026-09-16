@@ -1,1 +1,31 @@
-<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Vyrobni plan pivovaru</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-100 p-6"><div class="max-w-7xl mx-auto"><h1 class="text-4xl font-bold text-center mb-6">🍺 Výrobní plán pivovaru</h1><div class="bg-white rounded-2xl shadow p-4 mb-4 flex justify-center gap-4"><button onclick="changeWeek(-1)" class="px-4 py-2 bg-slate-200 rounded">← Předchozí týden</button><span id="weekLabel" class="font-bold"></span><button onclick="changeWeek(1)" class="px-4 py-2 bg-slate-200 rounded">Další týden →</button></div><div class="overflow-x-auto"><table class="w-full bg-white shadow rounded-2xl overflow-hidden"><thead><tr class="bg-slate-800 text-white"><th class="p-3 text-left">Datum</th><th class="p-3">🍺 Vaření</th><th class="p-3">🍾 Stáčení</th><th class="p-3">🧼 Sanitace</th><th class="p-3">📋 Ostatní</th></tr></thead><tbody id="plannerBody"></tbody></table></div></div><script>const cats={vareni:['🍺','bg-blue-500'],staceni:['🍾','bg-green-500'],sanitace:['🧼','bg-orange-500'],ostatni:['📋','bg-slate-500']};let weekOffset=0;let tasks=JSON.parse(localStorage.getItem('breweryPlanner')||'{}');function save(){localStorage.setItem('breweryPlanner',JSON.stringify(tasks));}function changeWeek(s){weekOffset+=s;render();}function days(){const n=new Date();const m=new Date(n);const d=m.getDay();m.setDate(m.getDate()+(d===0?-6:1-d)+weekOffset*7);let a=[];for(let i=0;i<5;i++){let x=new Date(m);x.setDate(m.getDate()+i);a.push(x);}return a;}function addTask(date,cat){const t=prompt('Název úkolu');if(!t)return;const k=date+'-'+cat;tasks[k]=tasks[k]||[];tasks[k].push({id:Date.now(),title:t});save();render();}function delTask(date,cat,id){const k=date+'-'+cat;tasks[k]=(tasks[k]||[]).filter(t=>t.id!==id);save();render();}function render(){document.getElementById('weekLabel').textContent='Týden '+weekOffset;const tb=document.getElementById('plannerBody');tb.innerHTML='';days().forEach(day=>{const r=document.createElement('tr');r.className='border-t';const key=day.toISOString().split('T')[0];r.innerHTML='<td class="p-3 bg-slate-50 font-semibold">'+day.toLocaleDateString('cs-CZ',{weekday:'long'})+'<br>'+day.toLocaleDateString('cs-CZ')+'</td>';Object.keys(cats).forEach(cat=>{const td=document.createElement('td');td.className='p-3 align-top';let h='';(tasks[key+'-'+cat]||[]).forEach(t=>{h+='<div class="rounded-xl overflow-hidden shadow mb-2"><div class="'+cats[cat][1]+' text-white p-2">'+cats[cat][0]+' '+t.title+'</div><div class="p-2 text-right"><button onclick="delTask(''+key+'',''+cat+'','+t.id+')">❌</button></div></div>';});h+='<button class="w-full border-2 border-dashed p-2 rounded-xl" onclick="addTask(''+key+'',''+cat+'')">+ Přidat úkol</button>';td.innerHTML=h;r.appendChild(td);});tb.appendChild(r);});}render();</script></body></html>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Výrobní plán pivovaru v2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-6">
+<div class="max-w-7xl mx-auto">
+<h1 class="text-4xl font-bold text-center mb-6">🍺 Výrobní plán pivovaru</h1>
+<div class="bg-white rounded-2xl shadow p-4 mb-4 flex justify-center gap-4">
+<button onclick="changeWeek(-1)" class="px-4 py-2 bg-slate-200 rounded">← Předchozí týden</button>
+<div id="weekLabel" class="font-bold flex items-center"></div>
+<button onclick="changeWeek(1)" class="px-4 py-2 bg-slate-200 rounded">Další týden →</button>
+</div>
+<table class="w-full bg-white shadow rounded-2xl overflow-hidden">
+<thead><tr class="bg-slate-800 text-white"><th class="p-3 text-left">Datum</th><th>🍺 Vaření</th><th>🍾 Stáčení</th><th>🧼 Sanitace</th><th>📋 Ostatní</th></tr></thead>
+<tbody id="plannerBody"></tbody></table></div>
+<script>
+const categories={vareni:['🍺','bg-blue-500'],staceni:['🍾','bg-green-500'],sanitace:['🧼','bg-orange-500'],ostatni:['📋','bg-slate-500']};
+let weekOffset=0;
+let tasks=JSON.parse(localStorage.getItem('breweryPlannerV2')||'{}');
+function save(){localStorage.setItem('breweryPlannerV2',JSON.stringify(tasks));}
+function changeWeek(v){weekOffset+=v;render();}
+function getDays(){const now=new Date();const monday=new Date(now);const day=monday.getDay();const diff=day===0?-6:1-day;monday.setDate(monday.getDate()+diff+weekOffset*7);const arr=[];for(let i=0;i<5;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);arr.push(d);}return arr;}
+function addTask(dateKey,cat){const title=prompt('Název úkolu');if(!title)return;const k=dateKey+'-'+cat;if(!tasks[k])tasks[k]=[];tasks[k].push({id:Date.now(),title});save();render();}
+function deleteTask(dateKey,cat,id){const k=dateKey+'-'+cat;tasks[k]=(tasks[k]||[]).filter(t=>t.id!==id);save();render();}
+function render(){document.getElementById('weekLabel').textContent='Posun týdne: '+weekOffset;const body=document.getElementById('plannerBody');body.innerHTML='';getDays().forEach(d=>{const tr=document.createElement('tr');tr.className='border-t';const dateKey=d.toISOString().split('T')[0];let html='<td class="p-3 bg-slate-50 font-semibold align-top">'+d.toLocaleDateString('cs-CZ',{weekday:'long'})+'<br>'+d.toLocaleDateString('cs-CZ')+'</td>';tr.innerHTML=html;Object.keys(categories).forEach(cat=>{const td=document.createElement('td');td.className='p-3 align-top';const key=dateKey+'-'+cat;let content='';(tasks[key]||[]).forEach(task=>{content+=`<div class="rounded-xl shadow mb-2 overflow-hidden"><div class="${categories[cat][1]} text-white p-2">${categories[cat][0]} ${task.title}</div><div class="p-2 text-right"><button data-date="${dateKey}" data-cat="${cat}" data-id="${task.id}" class="deleteBtn">❌</button></div></div>`;});content+=`<button class="w-full border-2 border-dashed rounded-xl p-2 addBtn" data-date="${dateKey}" data-cat="${cat}">+ Přidat úkol</button>`;td.innerHTML=content;tr.appendChild(td);});body.appendChild(tr);});document.querySelectorAll('.addBtn').forEach(b=>b.onclick=()=>addTask(b.dataset.date,b.dataset.cat));document.querySelectorAll('.deleteBtn').forEach(b=>b.onclick=()=>deleteTask(b.dataset.date,b.dataset.cat,Number(b.dataset.id)));}
+render();
+</script></body></html>
